@@ -61,7 +61,8 @@ create table TeacherGroup
 create table VisitDate
 (
 	Id int identity(1,1) primary key,
-	"Date" date not null unique
+	"Date" date not null unique,
+	IsVisitDate bit default 0,
 );
 
 create table VisitNote
@@ -69,7 +70,7 @@ create table VisitNote
 	Id int identity(1,1) primary key,
 	Child int not null,
 	"Date" int not null,
-	Visited bit default 0,
+	Visited bit default null,
 	Additional nvarchar(100) null,
 	foreign key (Child) references Child (Id) on delete cascade,
 	foreign key ("Date") references VisitDate (Id) on delete cascade
