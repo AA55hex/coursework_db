@@ -5,14 +5,22 @@ use MyKindergarden;
 create table ClientType
 (
 	Id int primary key,
-	TypeName nvarchar(10) not null unique
+	TypeName nvarchar(20) not null unique
 );
+insert into ClientType values
+(0, N'admin'),
+(1, N'teacher');
 
 create table GroupType
 (
 	Id int primary key,
 	TypeName nvarchar(20) not null unique
 );
+insert into GroupType values
+(1, N'Первая младшая'),
+(2, N'Вторая младшая'),
+(3, N'Средняя'),
+(4, N'Старшая');
 
 create table Client 
 (
@@ -23,18 +31,22 @@ create table Client
 	LastName nvarchar(30) not null,
 	MiddleName nvarchar(30) not null,
 	IsActive bit not null default 1,
-	ClientType int not null default 1,
-	foreign key (ClientType) references ClientType(Id)
+	ClientType_Id int not null default 1,
+	foreign key (ClientType_Id) references ClientType(Id)
 );
+insert into Client(Username, Password, FirstName, LastName, MiddleName, IsActive, ClientType_Id) values
+	(N'admin', N'admin', N'Роман', N'Гупало', N'Валерьевич', 1, 0),
+	(N'teacher', N'teacher', N'Гупало', N'Роман', N'Валерьевич', 1, 1);
 
 create table KinderGroup
 (
 	Id int identity(1,1) primary key,
 	GroupName nvarchar(30) not null unique,
-	GroupType int null,
-	IsActive bit null,
-	foreign key (GroupType) references GroupType (Id)
+	GroupType_Id int not null default 0,
+	IsActive bit not null default 1,
+	foreign key (GroupType_Id) references GroupType (Id)
 );
+
 
 create table Child
 (
@@ -42,36 +54,46 @@ create table Child
 	FirstName nvarchar(30) not null,
 	LastName nvarchar(30) not null,
 	MiddleName nvarchar(30) not null,
-	KinderGroup int null,
+	BirthDate date not null default GETDATE(),
+	KinderGroup_Id int null,
 	VisitStart date not null,
 	VisitEnd date null,
-	foreign key (KinderGroup) references KinderGroup (Id) on delete set null
+	foreign key (KinderGroup_Id) references KinderGroup (Id) on delete set null
 );
 
 create table TeacherGroup
 (
-	Teacher int not null,
-	KinderGroup int not null,
-	"Shift" int not null,
-	foreign key (Teacher) references Client (Id) on delete cascade,
-	foreign key (KinderGroup) references KinderGroup (Id) on delete cascade,
-	constraint PK_TeacherGroup primary key clustered (Teacher, KinderGroup)
+	Teacher_Id int not null,
+	KinderGroup_Id int not null,
+	foreign key (Teacher_Id) references Client (Id) on delete cascade,
+	foreign key (KinderGroup_Id) references KinderGroup (Id) on delete cascade,
+	constraint PK_TeacherGroup primary key clustered (Teacher_Id, KinderGroup_Id)
 );
 
 create table VisitDate
 (
 	Id int identity(1,1) primary key,
 	"Date" date not null unique,
-	IsVisitDate bit default 0,
+	IsVisitDate bit not null default 1,
 );
 
 create table VisitNote
 (
 	Id int identity(1,1) primary key,
-	Child int not null,
-	"Date" int not null,
+	Child_Id int not null,
+	VisitDate_Id int not null,
 	Visited bit default null,
 	Additional nvarchar(100) null,
-	foreign key (Child) references Child (Id) on delete cascade,
-	foreign key ("Date") references VisitDate (Id) on delete cascade
+	foreign key (Child_Id) references Child (Id) on delete cascade,
+	foreign key (VisitDate_Id) references VisitDate (Id) on delete cascade,
+	CONSTRAINT uc_ChildDate UNIQUE (Child_Id, VisitDate_Id)
+
 );
+
+create table VisitDateSupportTable
+(
+	Id bit primary key,
+	LastUpdate date null
+);
+
+insert VisitDateSupportTable values (0,GETDATE());
